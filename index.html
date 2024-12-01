@@ -58,7 +58,7 @@ salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
     const std =0.8821288739209803;
     let salaryRangeElement = document.getElementById("dinheiro");
     soma  = calcularTotalDinheiroPonderado(10000000,mean,std,lower,upper)
-    salaryRangeElement.innerHTML = `Renda Media Mensal: R$${soma}`;
+    salaryRangeElement.innerHTML = `Renda Media Mensal: R$${soma.toFixed(0)}`;
 
 }
     function calculateCDFDifference() {
