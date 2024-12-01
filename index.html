@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Range and CDF Difference</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.4/dist/jstat.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+       <script>
+
+    function calculateCDFDifference() {
+        
+        const mean = 7.56334867643575;  
+        const std =0.8821288739209803;
+        const elementl = document.getElementById("lowerValue").value;
+
+        // Get the id and convert to float
+        const lower = parseFloat(elementl);
+        const elementu = document.getElementById("upperValue").value;
+        if (elementu === "" || elementl === "") {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Por favor prencha os duas entradas de salario"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+        
+
+        // Get the id and convert to float
+        const upper = parseFloat(elementu);
+        if (lower>upper) {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+        
+  // If the id is a numeric string, it'll be converted to float
+
+    
+        // Define log-normal distribution parameters
+        const shape = 0.9456127289913486;  // Standard deviation of the log-transformed data
+        const scale = 1894.4660110592108; // exp(mu), the scale parameter
+        const loc = 0; // Location parameter (usually 0 for log-normal)
+        console.log("μ (mean of the normal distribution):", mean);
+        // Define range for x-values (income range example)
+        const minVal = 10.0; // Minimum value (you may adjust this based on your data)
+        const maxVal = 300000.0; // Maximum value (adjust according to your data)
+        const steps = 1000; // Number of points for the x-axis
+        const step = (maxVal - minVal) / steps; // Step size for the x-values
+
+        // Generate x-values for plotting
+        const xValues = [];
+        const yValues = [];
+        for (let i = minVal; i <= maxVal; i += step) {
+            
+       xValues.push(i);
+            const pdfValue = jStat.lognormal.pdf(i, mean, std);  // Calculate the PDF value for the current x
+            yValues.push(pdfValue); 
+
+        }
+        const xValuesFill = xValues.filter(x => (x < upper) && (x>lower) );  // Only values less than floatValue   
+
+        // Calculate the PDF for each x in xValuesFill
+        const yValuesFill = xValuesFill.map(x => jStat.lognormal.pdf(x, mean, std));  // Map each x to its PDF value
+
+
+        const ctx = document.getElementById('lognormPlot').getContext('2d');
+if (ctx.myChart) {
+    ctx.myChart.destroy();  // Destroy the existing chart
+}
+
+// Register the required components including the logarithmic scale
+
+const filteredYValues = yValues.filter(value => value > 0);
+const filteredYValuesFill = yValuesFill.filter(value => value > 0);
+// Calculate the 1st and 99th percentiles for a reasonable range
+const lowerBound = filteredYValues.slice(0); // 1st percentile
+const upperBound =yValuesFill.slice(-1); // 99th percentile
+
+
+const data = {
+    datasets: [
+    {
+    label: 'Filled Area (After 5)',
+    data: xValuesFill.map((x, index) => ({
+      x, // Use each value of xValuesFill individually
+      y: filteredYValuesFill[index] // Corresponding y-value from filteredYValuesFill
+    })),
+    borderColor: 'blue', // You can change the border color
+    fill: true,
+    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Light blue background for the fill
+    borderWidth: 2,
+    tension: 0.4
+  },
+  {
+    label: 'Line without Fill (Before 5)',
+    data: xValues.map((x, index) => ({
+      x,
+      y: filteredYValues[index] // Corrected this line
+    })),
+    borderColor: 'red',
+    fill: false,
+    borderWidth: 2,
+    tension: 0.4
+  }
+]}
+  const config = {
+  type: 'line',
+  data: data,
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: 'Chart.js Line Chart - Lognormal Distribution'
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'X Value'
+        },
+        type: 'logarithmic', // Set x-axis to logarithmic scale for better visualization
+        min: minVal,  // Ensure minVal is positive
+        max: maxVal,  // Ensure maxVal is positive
+        ticks: {
+          // Optional: Customize ticks to suit the log scale
+          callback: function(value) {
+            return value.toExponential(2); // Display ticks in exponential form (optional)
+          }
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Probability Density'
+        },
+        min: 0,  // Probability densities can't be negative
+        // max: upperBound,  // Uncomment if you want to set a max value based on PDF range
+        beginAtZero: true, // Ensures the y-axis starts at 0, optional
+      }
+    }
+  }
+};
+let probabilidade = jStat.lognormal.cdf(upper, mean, std) -  jStat.lognormal.cdf(lower, mean, std);
+// Exibindo os resultados
+let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = `Probabilidade de uma pessoa ganhar entre R$${lower} e R$${upper}: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
+
+ctx.myChart  = new Chart(ctx, config);
+};
+
+
+</script>
+</head>
+<style>
+       body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h1 {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 2rem;
+            color: #004080;
+        }
+
+        canvas {
+            margin: 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 90%;
+        }
+
+        label, p, h3 {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #00509e;
+        }
+
+        input[type="number"] {
+            width: 90%;
+            max-width: 300px;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #fff;
+            background-color: #00509e;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+
+        button:hover {
+            background-color: #003f7f;
+        }
+
+        .footer-note {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            label {
+                font-size: 0.9rem;
+            }
+
+            input[type="number"], button {
+                font-size: 0.9rem;
+            }
+        }
+        #salaryRange {
+    font-size: 2em; /* Tamanho grande da fonte */
+    font-weight: bold; /* Texto em negrito */
+    color: #ffffff; /* Cor do texto branca */
+    background-color: #56af4c; /* Cor de fundo verde */
+    padding: 20px; /* Espaçamento interno para dar destaque */
+    border-radius: 10px; /* Cantos arredondados */
+    text-align: center; /* Alinhamento centralizado */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra suave ao redor */
+    transition: transform 0.3s ease, background-color 0.3s ease; /* Transições suaves */
+}
+
+#salaryRange:hover {
+    transform: scale(1.1); /* Aumenta ligeiramente o tamanho ao passar o mouse */
+    background-color: #a09445; /* Muda a cor de fundo ao passar o mouse */
+}
+
+#lower ,#upper {
+    width: 100%; /* Garante que o range ocupe toda a largura da tela */
+    -webkit-appearance: none; /* Remove o estilo padrão do navegador no iOS */
+    appearance: none; /* Remove o estilo padrão do navegador */
+    height: 10px; /* Ajusta a altura do slider */
+    background: #0716ea; /* Cor de fundo do slider */
+    border-radius: 5px; /* Cantos arredondados */
+    outline: none; /* Remove a borda de foco padrão */
+    transition: background 0.3s ease; /* Transição suave para a cor de fundo */
+}
+
+/* Estilo do "thumb" do slider */
+#lower::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#lower::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#lower:focus {
+    background: #ead200; /* Cor de fundo do slider ao focar */
+}
+
+/* Ajustes específicos para telas menores (dispositivos móveis) */
+@media screen and (max-width: 768px) {
+    #lower {
+        height: 12px; /* Ajusta a altura do slider para dispositivos móveis */
+    }
+    #lower::-webkit-slider-thumb, #lower::-moz-range-thumb {
+        width: 18px; /* Ajusta o tamanho do thumb no mobile */
+        height: 18px;
+    }
+}
+    </style>
+</head>
+<body>
+    <h1>O Real Custo Brasil - Simulador de  Desigualdade</h1>
+    <h3>Qual a porcentagem da populacao que ganham entre esses dois valores?</h3>
+    <label for="lower">Valor mínimo (R$):</label>
+    <input type="range" id="lower" min="0" max="10000" step="100" value="0">
+    <input type="number" id="lowerValue" value="0" min="0" max="1000000" step="100"><br>
+    
+    <label for="upper">Valor máximo (R$):</label>
+    <input type="range" id="upper" min="0" max="10000" step="100" value="1420">
+    <input type="number" id="upperValue" value="1420" min="0" max="1000000" step="100"><br>
+    
+    <p id="salaryRange">Probabilidade Aparacera Aqui</p>
+    <button onclick="calculateCDFDifference()">Calcular</button>
+    
+   
+    
+    <label for="upper"> Um Gráfico da Simulação* de Desigualdade de Renda abaixo:</label>
+    <canvas id="lognormPlot" width="300" height="200"></canvas>
+    
+    
+    <p class="footer-note">*baseados em dados do primeiro trimestre do PNAD de 2024, aplicado curva lognormal com remocao de outliers</p>
+    <p class="footer-note">*Isso é uma simulacao</p>
+
+    <h3 id="cdfDifference"></h3>
+    <h3 id="Pessoas"></h3>
+
+    <script>
+
+document.addEventListener('DOMContentLoaded', function() {
+            calculateCDFDifference()
+            document.getElementById('lower').addEventListener('input', function() {
+                document.getElementById('lowerValue').value = this.value;
+                calculateCDFDifference();
+            });
+
+            document.getElementById('upper').addEventListener('input', function() {
+                document.getElementById('upperValue').value = this.value;
+                calculateCDFDifference();
+            });
+            document.getElementById('lowerValue').addEventListener('input', function() {
+                document.getElementById('lower').value = this.value;
+                calculateCDFDifference();
+            });
+
+            document.getElementById('upperValue').addEventListener('input', function() {
+                document.getElementById('upper').value = this.value;
+                calculateCDFDifference();
+            });
+        });
+
+    </script>
+</body>
+</html>
