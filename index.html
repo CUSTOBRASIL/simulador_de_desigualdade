@@ -197,7 +197,7 @@ const data = {
 let probabilidade = jStat.lognormal.cdf(upper, mean, std) -  jStat.lognormal.cdf(lower, mean, std);
 // Exibindo os resultados
 let salaryRangeElement = document.getElementById("salaryRange");
-salaryRangeElement.innerHTML = `De acordo com a estatistica ${Math.round((probabilidade *212583750))} pessoas ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
+salaryRangeElement.innerHTML = `De acordo com a estatistica  pessoas que ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
 
 ctx.myChart  = new Chart(ctx, config);
 };
@@ -365,6 +365,7 @@ ctx.myChart  = new Chart(ctx, config);
     
     <p id="salaryRange">Probabilidade Aparacera Aqui</p>
     <button  onclick="calcular()">Calcular Renda Possivel</button>
+    <h1 id="dinheiro">Renda Media Mensal: R$</h1>
     <h1 id="dinheiro">Renda Media Mensal: R$</h1>
     
    
