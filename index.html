@@ -9,7 +9,58 @@
     <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.4/dist/jstat.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
        <script>
+function calcularTotalDinheiroPonderado(N, mu, sigma, x_min, x_max) {
+    
+    
+    const mean = 7.56334867643575;  
+    const std =0.8821288739209803;
+   
+    // Gerar pesos aleatórios entre 0 e 1 para cada indivíduo
 
+    // Gerar amostras de uma distribuição lognormal usando jstat.lognormal
+    const amostras = Array.from({ length: N }, () => jStat.lognormal.sample(mean, std));
+    const pesos = Array.from({ length: N }, () => Math.random());
+
+    // Filtrar os indivíduos cujas rendas estão no intervalo [x_min, x_max]
+    const filtro = amostras.map(renda => renda >= x_min && renda <= x_max);
+
+    // Calcular o total ponderado de dinheiro para os indivíduos dentro do intervalo
+    let totalDinheiroPonderado = filtro.reduce((acc, isDentro, idx) => {
+        if (isDentro) {
+            acc += pesos[idx] * amostras[idx];
+        }
+        return acc;
+    }, 0) / filtro.reduce((acc, isDentro) => acc + (isDentro ? 1 : 0), 0);
+
+    return totalDinheiroPonderado;
+}
+
+function calcular(){
+    // Get the id and convert to float
+    const elementl = document.getElementById("lowerValue").value;
+    const lower = parseFloat(elementl);
+        const elementu = document.getElementById("upperValue").value;
+        if (elementu === "" || elementl === "") {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Por favor prencha os duas entradas de salario"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+        
+
+        // Get the id and convert to float
+        const upper = parseFloat(elementu);
+        if (lower>upper) {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+    const mean = 7.56334867643575;  
+    const std =0.8821288739209803;
+    let salaryRangeElement = document.getElementById("dinheiro");
+    soma  = calcularTotalDinheiroPonderado(10000000,mean,std,lower,upper)
+    salaryRangeElement.innerHTML = `Renda Media Mensal: R$${soma}`;
+
+}
     function calculateCDFDifference() {
         
         const mean = 7.56334867643575;  
@@ -302,8 +353,8 @@ ctx.myChart  = new Chart(ctx, config);
     </style>
 </head>
 <body>
-    <h1>O Real Custo Brasil - Simulador de  Desigualdade</h1>
-    <h3>Qual a porcentagem da populacao que ganham entre esses dois valores?</h3>
+    <h1>O Real Custo Brasil - Simulador de  Desigualdade  </h1>
+    <h3>Qual a porcentagem da populacao que ganham entre esses dois valores de renda mensal?</h3>
     <label for="lower">Valor mínimo (R$):</label>
     <input type="range" id="lower" min="0" max="100000" step="100" value="0">
     <input type="number" id="lowerValue" value="0" min="0" max="1000000" step="100"><br>
@@ -313,7 +364,8 @@ ctx.myChart  = new Chart(ctx, config);
     <input type="number" id="upperValue" value="1420" min="0" max="1000000" step="100"><br>
     
     <p id="salaryRange">Probabilidade Aparacera Aqui</p>
- 
+    <button  onclick="calcular()">Calcular</button>
+    <h1 id="dinheiro">Renda Media Mensal: R$</h1>
     
    
     
