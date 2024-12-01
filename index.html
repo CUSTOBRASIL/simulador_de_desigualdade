@@ -132,7 +132,7 @@ const upperBound =yValuesFill.slice(-1); // 99th percentile
 const data = {
     datasets: [
     {
-    label: 'Filled Area (After 5)',
+    label: 'Area na Curva de probabilidade entre R$'+upper+' e R$'+ lower ,
     data: xValuesFill.map((x, index) => ({
       x, // Use each value of xValuesFill individually
       y: filteredYValuesFill[index] // Corresponding y-value from filteredYValuesFill
@@ -144,7 +144,7 @@ const data = {
     tension: 0.4
   },
   {
-    label: 'Line without Fill (Before 5)',
+    label: 'Curva log normal,
     data: xValues.map((x, index) => ({
       x,
       y: filteredYValues[index] // Corrected this line
@@ -170,7 +170,7 @@ const data = {
       x: {
         title: {
           display: true,
-          text: 'X Value'
+          text: ''
         },
         type: 'logarithmic', // Set x-axis to logarithmic scale for better visualization
         min: minVal,  // Ensure minVal is positive
