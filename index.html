@@ -36,6 +36,8 @@ function calcularTotalDinheiroPonderado(N, mu, sigma, x_min, x_max) {
 }
 
 function calcular(){
+    const mean = 7.5466922894474715;  
+    const std =0.9456127289913486;
     // Get the id and convert to float
     const elementl = document.getElementById("lowerValue").value;
     const lower = parseFloat(elementl);
@@ -54,17 +56,58 @@ salaryRangeElement.innerHTML = "Por favor prencha os duas entradas de salario"
 salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
         return; // Interrompe a execução da função se as entradas estiverem vazias
         }
-    const mean = 7.56334867643575;  
-    const std =0.8821288739209803;
     let salaryRangeElement = document.getElementById("dinheiro");
-    soma  = calcularTotalDinheiroPonderado(10000000,mean,std,lower,upper)
-    salaryRangeElement.innerHTML = `Renda Media Mensal: R$${soma.toFixed(0)}`;
+    soma  = totalIncome(mean,std,lower,upper,1000);
+    salaryRangeElement.innerHTML = `Essas Pessoas tem no total R$${soma}`;
 
 }
+// Lognormal PDF function using jStat
+function lognormalPDF(x, mu, sigma) {
+  return jStat.lognormal.pdf(x, mu, sigma);
+}
+
+// Trapezoidal rule for numerical integration
+function y(x)
+{
+    const mean = 7.5466922894474715;  
+    const std =0.9456127289913486;
+    
+    // Declaring the function 
+    // f(x) = 1/(1+x*x)
+    return  jStat.lognormal.pdf(x, mu, sigma);
+}
+  
+// Function to evaluate the value of integral
+function trapezoidal(a, b, n)
+{
+    
+    // Grid spacing
+    let h = (b - a) / n;
+  
+    // Computing sum of first and last terms
+    // in above formula
+    let s = y(a) + y(b);
+  
+    // Adding middle terms in above formula
+    for(let i = 1; i < n; i++)
+        s += 2 * y(a + i * h);
+  
+    // h/2 indicates (b-a)/2n. Multiplying h/2
+    // with s.
+    return (h / 2) * s;
+}
+
+// Function to calculate total income for an interval [x_min, x_max]
+function totalIncome(mu, sigma, xMin, xMax, n) {
+  // Use numerical integration to compute the integral of x * PDF
+  const income = trapezoidalRule((x, mu, sigma) => x * lognormalPDF(x, mu, sigma), xMin, xMax, n, mu, sigma);
+  return income;
+}
+
     function calculateCDFDifference() {
         
-        const mean = 7.56334867643575;  
-        const std =0.8821288739209803;
+        const mean = 7.5466922894474715;  
+        const std =0.9456127289913486;
         const elementl = document.getElementById("lowerValue").value;
 
         // Get the id and convert to float
