@@ -9,33 +9,43 @@
     <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.4/dist/jstat.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
        <script>
-function y(x, mean, std)
+// Lognormal PDF function using jStat
+function lognormalPDF(x, mu, sigma) {
+  return jStat.lognormal.pdf(x, mu, sigma);
+}
+function y(x)
 {
+        const mean = 7.5466922894474715;  
+    const std =0.9456127289913486;
     return x * jStat.lognormal.pdf(x, mean, std);
 }
 
 // Trapezoidal rule for numerical integration
-function trapezoidal(a, b, n, mean, std)
+// Function to evaluate the value of integral
+function trapezoidal(a, b, n)
 {
+    
     // Grid spacing
     let h = (b - a) / n;
-
-    // Computing sum of first and last terms in the trapezoidal rule
-    let s = y(a, mean, std) + y(b, mean, std);
-
-    // Adding middle terms
-    for (let i = 1; i < n; i++) {
-        s += 2 * y(a + i * h, mean, std);
-    }
-
-    // Final result of the trapezoidal rule
+  
+    // Computing sum of first and last terms
+    // in above formula
+    let s = y(a) + y(b);
+  
+    // Adding middle terms in above formula
+    for(let i = 1; i < n; i++)
+        s += 2 * y(a + i * h);
+  
+    // h/2 indicates (b-a)/2n. Multiplying h/2
+    // with s.
     return (h / 2) * s;
 }
-
 // Function to calculate total income for an interval [x_min, x_max]
-function totalIncome(mu, sigma, xMin, xMax, n) {
-  // Use numerical integration to compute the integral of x * PDF
-  const income = trapezoidal(xMin, xMax, n, mu, sigma);
+function totalIncome(mu, sigma, xMin, xMax, d) {
+    const n = 1000000; // Increased resolution
+  const income = trapezoidal(xMin, xMax, n);
+  console.log(probability);
+  console.log(income)
   return income;
 }
 
@@ -179,7 +189,7 @@ let salaryRangeElement = document.getElementById("salaryRange");
 salaryRangeElement.innerHTML = `De acordo com a estatistica ${(probabilidade *216400000)}  pessoas  ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
  let salaryincomeElement = document.getElementById("dinheiro");
     soma  = totalIncome(mean,std,lower,upper,1000);
-    salaryincomeElement.innerHTML = `Essas Pessoas tem possivelmente em media:  R$${soma} de salario`;
+    salaryincomeElement.innerHTML = `Essas Pessoas tem possivelmente em media:  R$${(soma/probabilidade)} de salario`;
 ctx.myChart  = new Chart(ctx, config);
 };
 
@@ -345,7 +355,7 @@ ctx.myChart  = new Chart(ctx, config);
     <input type="number" id="upperValue" value="1420" min="0" max="1000000" step="100"><br>
     
     <p id="salaryRange">Probabilidade Aparacera Aqui</p>
-    <button  onclick="calcular()">Calcular Renda Possivel</button>
+
     <h1 id="dinheiro">Renda Media Mensal: R$</h1>
 
    
