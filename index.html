@@ -146,7 +146,7 @@ const data = {
 let probabilidade = jStat.lognormal.cdf(upper, mean, std) -  jStat.lognormal.cdf(lower, mean, std);
 // Exibindo os resultados
 let salaryRangeElement = document.getElementById("salaryRange");
-salaryRangeElement.innerHTML = `De acordo com a estatistica ${(probabilidade *216400000)}  pessoas  ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
+salaryRangeElement.innerHTML = `De acordo com a estatistica  pessoas  ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
 const somat = calcular(probabilidade)
 ctx.myChart  = new Chart(ctx, config);
 taxacao(somat,p_size)
@@ -156,7 +156,7 @@ function taxacao(somat, p_size) {
         if (elementt != "" ) {
             const elementto = document.getElementById("taxacao");
             const taxacaop = parseFloat(elementt);
-            elementto.innerHTML = `Taxacao de ${taxacaop}% garantindo R$${((somat *p_size)*taxacaop)}`;
+            elementto.innerHTML = `Taxacao de ${taxacaop}% garantindo R$${((soma)*taxacaop)} por pessoa em media`;
         }
 }
 
@@ -185,7 +185,7 @@ salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
     
     let taxacaoelem = document.getElementById("taxacao");
     soma  = totalIncome(mean,std,lower,upper,10000000,probabilidade);
-    salaryRangeElement.innerHTML = `Essas Pessoas tem no total R$${(soma)}`;
+    salaryRangeElement.innerHTML = `Essas Pessoas tem no total media de renda de  R$${(soma)}`;
     return soma;
 }
 
@@ -224,8 +224,7 @@ function trapezoidal(a, b, n)
 function totalIncome(mu, sigma, xMin, xMax, d,probability) {
     const n = 1000000; // Increased resolution
   const income = trapezoidal(xMin, xMax, n);
-  console.log(probability);
-  console.log(income)
+
   return income/probability;
 }
 
