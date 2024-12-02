@@ -9,44 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.4/dist/jstat.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
        <script>
-// Lognormal PDF function using jStat
-function lognormalPDF(x, mu, sigma) {
-  return jStat.lognormal.pdf(x, mu, sigma);
-}
-function y(x)
-{
-        const mean = 7.5466922894474715;  
-    const std =0.9456127289913486;
-    return x * jStat.lognormal.pdf(x, mean, std);
-}
-
-// Trapezoidal rule for numerical integration
-// Function to evaluate the value of integral
-function trapezoidal(a, b, n)
-{
-    
-    // Grid spacing
-    let h = (b - a) / n;
-  
-    // Computing sum of first and last terms
-    // in above formula
-    let s = y(a) + y(b);
-  
-    // Adding middle terms in above formula
-    for(let i = 1; i < n; i++)
-        s += 2 * y(a + i * h);
-  
-    // h/2 indicates (b-a)/2n. Multiplying h/2
-    // with s.
-    return (h / 2) * s;
-}
-// Function to calculate total income for an interval [x_min, x_max]
-function totalIncome(mu, sigma, xMin, xMax, d) {
-    const n = 1000000; // Increased resolution
-  const income = trapezoidal(xMin, xMax, n);
-  return income;
-}
-
 
     function calculateCDFDifference() {
         
@@ -85,7 +47,7 @@ salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
         const maxVal = 300000.0; // Maximum value (adjust according to your data)
         const steps = 1000; // Number of points for the x-axis
         const step = (maxVal - minVal) / steps; // Step size for the x-values
-
+        const p_size  = 216400000
         // Generate x-values for plotting
         const xValues = [];
         const yValues = [];
@@ -115,11 +77,10 @@ const filteredYValuesFill = yValuesFill.filter(value => value > 0);
 const lowerBound = filteredYValues.slice(0); // 1st percentile
 const upperBound =yValuesFill.slice(-1); // 99th percentile
 
-
 const data = {
     datasets: [
     {
-    label: 'Area na Curva de probabilidade entre R$'+upper+' e R$'+ lower ,
+    label: 'Filled Area (After 5)',
     data: xValuesFill.map((x, index) => ({
       x, // Use each value of xValuesFill individually
       y: filteredYValuesFill[index] // Corresponding y-value from filteredYValuesFill
@@ -131,7 +92,7 @@ const data = {
     tension: 0.4
   },
   {
-    label: 'Curva log normal',
+    label: 'Line without Fill (Before 5)',
     data: xValues.map((x, index) => ({
       x,
       y: filteredYValues[index] // Corrected this line
@@ -157,7 +118,7 @@ const data = {
       x: {
         title: {
           display: true,
-          text: ''
+          text: 'X Value'
         },
         type: 'logarithmic', // Set x-axis to logarithmic scale for better visualization
         min: minVal,  // Ensure minVal is positive
@@ -181,16 +142,92 @@ const data = {
     }
   }
 };
+
 let probabilidade = jStat.lognormal.cdf(upper, mean, std) -  jStat.lognormal.cdf(lower, mean, std);
 // Exibindo os resultados
 let salaryRangeElement = document.getElementById("salaryRange");
 salaryRangeElement.innerHTML = `De acordo com a estatistica ${(probabilidade *216400000)}  pessoas  ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
- let salaryincomeElement = document.getElementById("dinheiro");
-    soma  = totalIncome(mean,std,lower,upper,1000);
-    salaryincomeElement.innerHTML = `Essas Pessoas tem possivelmente em media:  R$${(soma/probabilidade)} de salario`;
+const somat = calcular(probabilidade)
 ctx.myChart  = new Chart(ctx, config);
+taxacao(somat,p_size)
 };
+function taxacao(somat, p_size) {
+    const elementt = document.getElementById("taxacao_input").value;
+        if (elementt != "" ) {
+            const elementto = document.getElementById("taxacao");
+            const taxacaop = parseFloat(elementt);
+            elementto.innerHTML = `Taxacao de ${taxacaop}% garantindo R$${((somat *p_size)*taxacaop)}`;
+        }
+}
 
+function calcular(probabilidade){
+    const mean = 7.5466922894474715;  
+    const std =0.9456127289913486;
+    // Get the id and convert to float
+    const elementl = document.getElementById("lowerValue").value;
+    const lower = parseFloat(elementl);
+        const elementu = document.getElementById("upperValue").value;
+        if (elementu === "" || elementl === "") {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Por favor prencha os duas entradas de salario"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+        
+
+        // Get the id and convert to float
+        const upper = parseFloat(elementu);
+        if (lower>upper) {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+    let salaryRangeElement = document.getElementById("dinheiro");
+    
+    let taxacaoelem = document.getElementById("taxacao");
+    soma  = totalIncome(mean,std,lower,upper,10000000,probabilidade);
+    salaryRangeElement.innerHTML = `Essas Pessoas tem no total R$${(soma)}`;
+    return soma;
+}
+
+// Lognormal PDF function using jStat
+function lognormalPDF(x, mu, sigma) {
+  return jStat.lognormal.pdf(x, mu, sigma);
+}
+function y(x)
+{
+        const mean = 7.5466922894474715;  
+    const std =0.9456127289913486;
+    return x * jStat.lognormal.pdf(x, mean, std);
+}
+
+// Trapezoidal rule for numerical integration
+// Function to evaluate the value of integral
+function trapezoidal(a, b, n)
+{
+    
+    // Grid spacing
+    let h = (b - a) / n;
+  
+    // Computing sum of first and last terms
+    // in above formula
+    let s = y(a) + y(b);
+  
+    // Adding middle terms in above formula
+    for(let i = 1; i < n; i++)
+        s += 2 * y(a + i * h);
+  
+    // h/2 indicates (b-a)/2n. Multiplying h/2
+    // with s.
+    return (h / 2) * s;
+}
+// Function to calculate total income for an interval [x_min, x_max]
+function totalIncome(mu, sigma, xMin, xMax, d,probability) {
+    const n = 1000000; // Increased resolution
+  const income = trapezoidal(xMin, xMax, n);
+  console.log(probability);
+  console.log(income)
+  return income/probability;
+}
 
 </script>
 </head>
@@ -342,20 +379,25 @@ ctx.myChart  = new Chart(ctx, config);
     </style>
 </head>
 <body>
-    <h2>Um projeto de O Real Custo Brasil - Simulador da Desigualdade Brasileira com dados do PNAD </h2>
-    <h3>Qual a porcentagem da populacao que ganham entre esses dois valores de renda mensal?</h3>
+    <h1>O Real Custo Brasil - Simulador de Desigualde e Taxacao Brasileira</h1>
+    <h3>Qual a porcentagem da populacao que ganham entre esses dois valores?</h3>
     <label for="lower">Valor mínimo (R$):</label>
     <input type="range" id="lower" min="0" max="100000" step="100" value="0">
-    <input type="number" id="lowerValue" value="0" min="0" max="1000000" step="100"><br>
+    <input type="number" id="lowerValue" value="0" min="0" max="1000000" step="10"><br>
     
     <label for="upper">Valor máximo (R$):</label>
     <input type="range" id="upper" min="0" max="100000" step="100" value="1420">
-    <input type="number" id="upperValue" value="1420" min="0" max="1000000" step="100"><br>
+    <input type="number" id="upperValue" value="1420" min="0" max="1000000" step="10"><br>
     
-    <p id="salaryRange">Probabilidade Aparacera Aqui</p>
+    <label for="taxacao_input">Taxacao para simulacao (%):</label>
+    <input type="range" id="taxacao_range" value="0" min="0" max="100" step="1"><br>
+    <input type="number" id="taxacao_input" value="0" min="0" max="100" step="10"><br>
 
-    <h1 id="dinheiro">Renda Media Mensal: R$</h1>
-
+    
+    <p id="salaryRange">Probabilidade Aparacera Aqui e </p>
+    <h1 id="dinheiro">R$</h1>
+    <h1 id="taxacao"></h1>
+    
    
     
     <label for="upper"> Um Gráfico da Simulação* de Desigualdade de Renda abaixo:</label>
@@ -365,20 +407,13 @@ ctx.myChart  = new Chart(ctx, config);
     <p class="footer-note">*baseados em dados do primeiro trimestre do PNAD de 2024, aplicado curva lognormal com remocao de outliers</p>
     <p class="footer-note">*Isso é uma simulacao</p>
 
-    <h3 id="cdfDifference"></h3>
-    <h3 id="Pessoas"></h3>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-4D76KTH5TW"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-4D76KTH5TW');
-</script>
+
     <script>
 
 document.addEventListener('DOMContentLoaded', function() {
+            
+
             calculateCDFDifference();
             document.getElementById('lower').addEventListener('input', function() {
                 document.getElementById('lowerValue').value = this.value;
@@ -396,6 +431,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             document.getElementById('upperValue').addEventListener('input', function() {
                 document.getElementById('upper').value = this.value;
+                calculateCDFDifference();
+            });
+            document.getElementById('taxacao_input').addEventListener('input', function() {
+                document.getElementById('taxacao_range').value = this.value;
+                calculateCDFDifference();
+            });
+            document.getElementById('taxacao_range').addEventListener('input', function() {
+                document.getElementById('taxacao_input').value = this.value;
                 calculateCDFDifference();
             });
         });
