@@ -268,7 +268,7 @@ const w1 = 0.99;
 const w2 = 0.01;        
 const probabilidade = mixtureCDFArea(lower, upper, mean, std, alpha, xm, w1, w2);// Exibindo os resultados
 let salaryRangeElement = document.getElementById("salaryRange");
-salaryRangeElement.innerHTML = `De acordo com a estatistica ${(probabilidade *216400000)}  pessoas  ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(2)}%*</span>`;
+salaryRangeElement.innerHTML = `${(probabilidade *216400000).toFixed(0)} pessoas ganham entre R$${lower} á R$${upper}, o que equivale a <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade *100).toFixed(2)}%*</span>da população.`;
 const somat  = calcular(probabilidade);
 ctx.myChart  = new Chart(ctx, config);
 const populationInRange = year * (upper - lower) / 10000000;  
