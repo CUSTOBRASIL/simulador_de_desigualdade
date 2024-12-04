@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Range and CDF Difference</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.4/dist/jstat.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+
+       <script>
+
+
+const year = 212583750
+const mu = 7.4951183537854105;  // Lognormal mean (mu)
+const std = 0.90533894552897;                // Lognormal sigma (standard deviation)
+const sigma = 0.8804282928250584;  
+const scale = 1840.9943476373417;// Lognormal scale parameter
+const alpha =2.099603013679234; // Pareto shape parameter (alpha)
+const xm = 20000.0;            // Pareto scale parameter (xm)
+const w1 = 0.99;                // Weight for Lognormal distribution
+const w2 = 0.01;                // Weight for Pareto distribution
+const mean = 7.518061110960761;
+function generateSamplecdf(mean, std, alpha, xm, w1, w2,dist) {
+    
+    
+    
+    let rand = Math.random()
+    
+    if (rand < w1) {
+        return jStat.lognormal.sample(mean, std);  // Amostra da distribuição Lognormal
+    } else {
+        return paretoSample(alpha,xm);  // Amostra da distribuição Pareto
+    }
+}
+
+function getLogNormal99thPercentile(mean, std) {
+    const z = 2.33; // z-score for 99th percentile
+    return Math.exp(mean + math.sqrt(2)*std* 2.33)
+}
+// Método de Monte Carlo para estimar o CDF da mistura
+function monteCarloCDF(x, mean, std, alpha, xm, w1, w2, numSamples,dist) {
+    let count = 0;
+    
+    // Gerar amostras e contar quantas são menores ou iguais a x
+    for (let i = 0; i < numSamples; i++) {
+        const sample = generateSamplecdf(mean, std, alpha, xm, w1, w2);
+        if (sample <= x) {
+            count++;
+        }
+    }
+    
+    // Estimar a CDF como a proporção de amostras <= x
+    return count / numSamples;
+}
+
+function monteCarloCDFPareto(alpha, xm, x, numSamples) {
+    let count = 0;
+    
+    // Generate random samples from Pareto distribution
+    for (let i = 0; i < numSamples; i++) {
+        let sample = paretoSample(alpha, xm);  // Generate Pareto sample
+        if (sample <= x) {
+            count++;
+        }
+    }
+    
+    // Estimate the CDF at x
+    return count / numSamples;
+}
+function paretoCDF(x, alpha, xm) {
+        if (x < xm) return 0; // Pareto undefined below xm
+        return 1 - Math.pow(xm / x, alpha);
+    }
+
+function mixtureCDF(x) {
+        if (x <= xm) {
+            // Only log-normal distribution is relevant
+            return w1 * jStat.lognormal.cdf(x, mean,std);
+        } else {
+            // Both log-normal and Pareto contributions
+            const logNormalPart = w1; // CDF of log-normal up to xm is w1
+            const paretoPart = w2 * paretoCDF(x,alpha,xm); // Pareto CDF above xm
+            return logNormalPart + paretoPart;
+        }
+    }
+function mixtureCDFArea(lower, upper, mean, std, alpha, xm, w1, w2) {
+    // Calculate the log-normal 99th percentile
+
+
+    const threshold = xm;
+
+
+    // Define CDF for Pareto distribution
+ 
+
+    let cdf = 0;
+    function mixtureCDF(x) {
+        if (x <= xm) {
+            // Only log-normal distribution is relevant
+            return w1 * jStat.lognormal.cdf(x, mean,std);
+        } else {
+            // Both log-normal and Pareto contributions
+            const logNormalPart = w1; // CDF of log-normal up to xm is w1
+            const paretoPart = w2 * paretoCDF(x,alpha,xm); // Pareto CDF above xm
+            return logNormalPart + paretoPart;
+        }
+    }
+return mixtureCDF(upper) - mixtureCDF(lower);
+
+}
+
+
+
+
+function logProbabilityLogNormal(a, b, mu, sigma) {
+    const cdfA = jStat.lognormal.cdf(a, mu, sigma);
+    const cdfB = jStat.lognormal.cdf(b, mu, sigma);
+
+    // Prevent issues with log(0) by checking for very small values
+    if (cdfB <= 0 || cdfA <= 0) {
+        return -Infinity; // Log-probability is undefined if CDF values are zero
+    }
+
+    // Logarithmic form to handle precision
+    const logCdfB = Math.log(cdfB);
+    const logCdfA = Math.log(cdfA);
+    const logProbability = logCdfB + Math.log(1 - Math.exp(logCdfA - logCdfB));
+    return logProbability;
+}
+
+    function calculateCDFDifference() {
+        
+
+        const elementl = document.getElementById("lowerValue").value;
+
+        // Get the id and convert to float
+        const lower = parseFloat(elementl);
+        const elementu = document.getElementById("upperValue").value;
+        if (elementu === "" || elementl === "") {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Por favor prencha os duas entradas de salario"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+        
+
+        // Get the id and convert to float
+        const upper = parseFloat(elementu);
+        if (lower>upper) {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+        
+  // If the id is a numeric string, it'll be converted to float
+
+
+        // Define range for x-values (income range example)
+        const minVal = 10.0; // Minimum value (you may adjust this based on your data)
+        const maxVal = 300000.0; // Maximum value (adjust according to your data)
+        const steps = 1000; // Number of points for the x-axis
+        const step = (maxVal - minVal) / steps; // Step size for the x-values
+        const p_size  = 216400000
+        // Generate x-values for plotting
+        const xValues = [];
+        const yValues = [];
+        for (let i = minVal; i <= maxVal; i += step) {
+            
+       xValues.push(i);
+            const pdfValue = jStat.lognormal.pdf(i, mean, std);  // Calculate the PDF value for the current x
+            yValues.push(pdfValue); 
+
+        }
+        const xValuesFill = xValues.filter(x => (x < upper) && (x>lower) );  // Only values less than floatValue   
+
+        // Calculate the PDF for each x in xValuesFill
+        const yValuesFill = xValuesFill.map(x => jStat.lognormal.pdf(x, mean, std));  // Map each x to its PDF value
+
+
+        const ctx = document.getElementById('lognormPlot').getContext('2d');
+if (ctx.myChart) {
+    ctx.myChart.destroy();  // Destroy the existing chart
+}
+
+// Register the required components including the logarithmic scale
+
+const filteredYValues = yValues.filter(value => value > 0);
+const filteredYValuesFill = yValuesFill.filter(value => value > 0);
+// Calculate the 1st and 99th percentiles for a reasonable range
+const lowerBound = filteredYValues.slice(0); // 1st percentile
+const upperBound =yValuesFill.slice(-1); // 99th percentile
+const data = {
+    datasets: [
+    {
+    label: 'Area Analisada',
+    data: xValuesFill.map((x, index) => ({
+      x, // Use each value of xValuesFill individually
+      y: filteredYValuesFill[index] // Corresponding y-value from filteredYValuesFill
+    })),
+    borderColor: 'blue', // You can change the border color
+    fill: true,
+    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Light blue background for the fill
+    borderWidth: 2,
+    tension: 0.4
+  },
+  {
+    label: 'Area nao analisada',
+    data: xValues.map((x, index) => ({
+      x,
+      y: filteredYValues[index] // Corrected this line
+    })),
+    borderColor: 'red',
+    fill: false,
+    borderWidth: 2,
+    tension: 0.4
+  }
+]}
+  const config = {
+  type: 'line',
+  data: data,
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: 'Chart.js Line Chart - Lognormal Distribution'
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'RENDA MENSAL'
+        },
+        type: 'logarithmic', // Set x-axis to logarithmic scale for better visualization
+        min: minVal,  // Ensure minVal is positive
+        max: maxVal,  // Ensure maxVal is positive
+        ticks: {
+          // Optional: Customize ticks to suit the log scale
+          callback: function(value) {
+            return value.toExponential(2); // Display ticks in exponential form (optional)
+          }
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'PROBABILIDADE'
+        },
+        min: 0,  // Probability densities can't be negative
+        // max: upperBound,  // Uncomment if you want to set a max value based on PDF range
+        beginAtZero: true, // Ensures the y-axis starts at 0, optional
+      }
+    }
+  }
+};
+const w1 = 0.99;                 
+const w2 = 0.01;        
+const probabilidade = mixtureCDFArea(lower, upper, mean, std, alpha, xm, w1, w2);// Exibindo os resultados
+let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = `De acordo com a estatistica ${(probabilidade *216400000)}  pessoas  ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
+const somat  = calcular(probabilidade);
+ctx.myChart  = new Chart(ctx, config);
+const populationInRange = year * (upper - lower) / 10000000;  
+const elementt = document.getElementById("taxacao_input").value;
+const result = calculateTotalAfterTaxIncome(lower, upper, 300000, year, mean,std,alpha,xm,parseFloat(elementt)/100);
+
+taxacao(somat,probabilidade,upper,lower,result)
+plot_Taxes(somat,probabilidade,lower,upper)
+};
+function taxacao(somat, probabilidade,upper,lower,result) {
+    
+    const elementt = document.getElementById("taxacao_input").value;
+        if (elementt != "" ) {
+            const elementto = document.getElementById("taxacao");
+            const elementtt = document.getElementById("total_tax");
+            const taxacaop = parseFloat(elementt)/100;
+            
+            elementto.innerHTML = `Taxacao de ${(taxacaop*100)}% garantindo em media R$${((taxacaop*somat)).toFixed(2)} e sobra de R$${((somat)-(taxacaop*somat)).toFixed(2)} por pessoa`;
+            elementtt.innerHTML = ` Nesse intervalo e taxa voce taxou em 2024 em 1 mes: <span style="color: #FF5733; font-size: 1.5em;">R$${result}<span>`;
+        }
+       
+}
+
+function plot_Taxes(income,probabilidade,lower,upper){
+
+let taxRates = [];
+for (let i = 0; i <= 1; i += 0.3) {
+    taxRates.push(i);
+}
+const taxes = taxRates.map(rate => calculateTotalAfterTaxIncome(lower, upper, 1000, year, mean,std,alpha,xm,parseFloat(rate)));
+// Check if the chart exists
+if (window.taxChart && window.taxChart.destroy) {
+    window.taxChart.destroy(); // Destroy the previous chart
+}
+// Get the canvas context
+var ctx = document.getElementById('taxChart').getContext('2d');
+
+// Create a new chart
+let lineData =  203000000000;
+let menorgasto= 172000000000;
+console.log(taxRates)
+console.log(taxes)
+window.taxChart = new Chart(ctx, { 
+    type: 'bar', // You can change the chart type to 'line', 'pie', etc.
+    data: {
+        labels: taxRates, // Make sure this is an array of labels (e.g., categories or values)
+        datasets: [{
+            label: 'Dinheiro Taxado dado a faixa de renda selecionada (R$)',
+            data: taxes, // Make sure this is an array of data corresponding to the labels
+            borderWidth: 1,
+            backgroundColor: 'rgba(54, 162, 235, 0.2)', // Optional: Add background color to the bars
+            borderColor: 'rgba(54, 162, 235, 1)', // Optional: Add border color to the bars
+        }
+       ]
+    },
+    options: {
+        responsive: true, // Make the chart responsive
+        scales: {
+            y: {
+                beginAtZero: true, // Ensures the y-axis starts at 0
+                ticks: {
+                    callback: function(value) { return 'R$ ' + value.toFixed(2); } // Optional: Format the ticks with "R$"
+                }
+            }
+        }}})
+    };
+
+
+
+
+    function brazilIncomeTax(income) {
+    let tax = 0;
+
+    if (income <= 2259.20) {
+        tax = 0; // Isso é um simulacao
+    } else if (income <= 2826.65) {
+        tax = 0.075
+    } else if (income <= 3751.05) {
+        tax = 0.15
+    } else if (income <= 4664.68) {
+        tax = 0.225
+    } else {
+        tax = 0.275
+    }
+    
+
+    const pdfValue = jStat.lognormal.pdf(income, mean, std);
+    return ((tax*income))*pdfValue
+    };
+function calcular(probabilidade){
+
+    // Get the id and convert to float
+    const elementl = document.getElementById("lowerValue").value;
+    const lower = parseFloat(elementl);
+        const elementu = document.getElementById("upperValue").value;
+        if (elementu === "" || elementl === "") {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Por favor prencha os duas entradas de salario"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+        
+
+        // Get the id and convert to float
+        const upper = parseFloat(elementu);
+        if (lower>upper) {
+            let salaryRangeElement = document.getElementById("salaryRange");
+salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
+        return; // Interrompe a execução da função se as entradas estiverem vazias
+        }
+    let salaryRangeElement = document.getElementById("dinheiro");
+    
+    let taxacaoelem = document.getElementById("taxacao");
+    soma  = expectedIncome(lower,upper,10000000,probabilidade);
+    salaryRangeElement.innerHTML = `Essas Pessoas tem no total  em media  <span style="color: #FF5733; font-size: 1.5em;">R$${(soma)}<span>`;
+    return soma;
+    }
+
+function pdfTaxacaoBrasileira(c)
+{ 
+    return function(x){
+    const pdfValue = jStat.lognormal.pdf(x, mean, std);
+    return (c*x * pdfValue);
+    }
+}
+
+
+// Trapezoidal rule for numerical integration
+// Function to evaluate the value of integral
+function trapezoidal(y,a, b, n)
+{
+    
+    // Grid spacing
+    let h = (b - a) / n;
+  
+    // Computing sum of first and last terms
+    // in above formula
+    let s = y(a) + y(b);
+  
+    // Adding middle terms in above formula
+    for(let i = 1; i < n; i++)
+        s += 2 * y(a + i * h);
+  
+    // h/2 indicates (b-a)/2n. Multiplying h/2
+    // with s.
+    return (h / 2) * s;
+}
+// Function to calculate total income for an interval [x_min, x_max]
+
+// Lognormal distribution sampling
+function lognormalSample(mu, sigma, scale) {
+    return jStat.lognormal.sample(mu, sigma, scale);
+}
+
+// Pareto distribution sampling
+function paretoSample(alpha, xm) {
+    const U = Math.random();  // Uniform random sample between 0 and 1
+    return (xm * Math.pow(1 - U, -1 / alpha));
+}
+function upperLimitRandom(percentileLimit = 0.99) {
+    return Math.random() * (1 - percentileLimit) + percentileLimit;
+}
+
+function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
+    let sum = 0;
+    let count = 0;
+    
+    for (let i = 0; i < n; i++) {
+        // Generate random value only in the upper `percentileLimit` range
+        let rand = Math.random();  // This will return a value >= percentileLimit (0.99)
+        
+        let sample;
+        if (rand < w1) {
+            // Sample from Lognormal distribution
+            sample = lognormalSample(mu, sigma, scale);
+        } else {
+            // Sample from Pareto distribution
+            sample = paretoSample(alpha, xm);
+        }
+
+        // If the sample is within the range [a, b], include it in the sum
+        if (sample >= a && sample <= b) {
+            sum += sample;
+            count++;
+        }
+    }
+
+    // Estimate the expected value as the average of the sampled values
+    return count > 0 ? sum / count : 0;
+}
+
+
+function monteCarlotaxes(mu, sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
+    let sum = 0;
+    let count = 0;
+    
+    for (let i = 0; i < n; i++) {
+        // Generate random value only in the upper `percentileLimit` range
+        let rand = Math.random();
+        let sample;
+        if (rand < w1) {
+            // Sample from Lognormal distribution
+            sample = lognormalSample(mu, sigma, scale);
+        } else {
+            // Sample from Pareto distribution
+            sample = paretoSample(alpha, xm);
+        }
+
+        // If the sample is within the range [a, b], include it in the sum
+        if (sample >= a && sample <= b) {
+            sum +=  sample * taxRate;
+            count++;
+        }
+    }
+
+    // Estimate the expected value as the average of the sampled values
+    return (sum/count)/probabilidade;
+}
+
+
+
+function totalIncome( xMin, xMax, d,probability,tax) {
+    const n = 10000;
+    // Example parameters for Lognormal and Pareto distributions
+  return monteCarlotaxes(mu, sigma, scale, alpha, xm, xMin, xMax, year,w1, w2,tax) 
+}
+function expectedIncome( xMin, xMax, d,probability) {
+    const n = 10000;
+    // Example parameters for Lognormal and Pareto distributions
+
+
+// Calculate the expected value over the range [a, b]
+const expectedValue = monteCarloExpectedValue(mu, sigma, scale, alpha, xm, xMin, xMax, n, w1, w2);
+
+return expectedValue
+
+}
+
+
+
+function calculateTotalAfterTaxIncome(a, b, N, P_total, mu, sigma, paretoShape, paretoScale,taxes) {
+  // Function to generate Log-Normal samples
+  function generateLogNormalSamples(mu, sigma, size) {
+    return Array.from({ length: size }, () => jStat.lognormal.sample(mu, sigma, size));// Log-normal distribution using jStat
+  }
+
+  function generateParetoSamples(shape, scale, size) {
+    return Array.from({ length: size }, () => paretoSample(shape, scale)); // Pareto distribution using jStat
+  }
+  // Number of Pareto samples (1% of the total sample size)
+  const numParetoSamples = Math.floor(N * 0.01);
+
+  // Number of Log-Normal samples (99% of the total sample size)
+  const numLogNormalSamples = N - numParetoSamples;
+
+  // Generate samples
+  const logNormalSamples = generateLogNormalSamples(mu, sigma, numLogNormalSamples);
+  const paretoSamples = generateParetoSamples(paretoShape, paretoScale, numParetoSamples);
+
+  // Combine the two distributions (Log-Normal and Pareto)
+  const allSamples = [...paretoSamples, ...logNormalSamples];
+
+  // Filter samples to be within the range [a, b]
+  const samplesInRange = allSamples.filter(sample => sample >= a && sample <= b);
+
+  // Apply 0.2 tax rate (keeping 80% of the income)
+  const afterTaxSamples = samplesInRange.map(sample => taxes * sample);
+
+  // Calculate the total after-tax income for the selected range in the sample
+  const totalAfterTaxIncomeSample = afterTaxSamples.reduce((acc, income) => acc + income, 0);
+
+  // Estimate the total after-tax income for the entire population based on the sample size
+  const sampleProportion = N / P_total; // Proportion of the population represented by the sample
+  const adjustedTotalAfterTaxIncome = totalAfterTaxIncomeSample / sampleProportion;
+
+  // Return results
+  return adjustedTotalAfterTaxIncome;
+}
+
+</script>
+</head>
+<style>
+      #COM {
+            font-size: 40px;
+            font-weight: bold;
+            color: yellow;
+            background-color: red;
+            padding: 20px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            display : none;
+            animation: communistAnimation 3s infinite;
+            box-shadow: 0 0 15px 5px rgba(255, 255, 0, 0.6);
+        }
+       body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h1 {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 2rem;
+            color: #004080;
+        }
+
+        canvas {
+            margin: 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 90%;
+        }
+
+        label, p, h3 {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #00509e;
+        }
+
+        input[type="number"] {
+            width: 90%;
+            max-width: 300px;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #fff;
+            background-color: #00509e;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+
+        button:hover {
+            background-color: #003f7f;
+        }
+
+        .footer-note {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            label {
+                font-size: 0.9rem;
+            }
+
+            input[type="number"], button {
+                font-size: 0.9rem;
+            }
+        }
+        #salaryRange {
+    font-size: 2em; /* Tamanho grande da fonte */
+    font-weight: bold; /* Texto em negrito */
+    color: #ffffff; /* Cor do texto branca */
+    background-color: #56af4c; /* Cor de fundo verde */
+    padding: 20px; /* Espaçamento interno para dar destaque */
+    border-radius: 10px; /* Cantos arredondados */
+    text-align: center; /* Alinhamento centralizado */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra suave ao redor */
+    transition: transform 0.3s ease, background-color 0.3s ease; /* Transições suaves */
+}
+
+#salaryRange:hover {
+    transform: scale(1.1); /* Aumenta ligeiramente o tamanho ao passar o mouse */
+    background-color: #a09445; /* Muda a cor de fundo ao passar o mouse */
+}
+
+#lower ,#upper {
+    width: 100%; /* Garante que o range ocupe toda a largura da tela */
+    -webkit-appearance: none; /* Remove o estilo padrão do navegador no iOS */
+    appearance: none; /* Remove o estilo padrão do navegador */
+    height: 10px; /* Ajusta a altura do slider */
+    background: #0716ea; /* Cor de fundo do slider */
+    border-radius: 5px; /* Cantos arredondados */
+    outline: none; /* Remove a borda de foco padrão */
+    transition: background 0.3s ease; /* Transição suave para a cor de fundo */
+}
+
+/* Estilo do "thumb" do slider */
+#lower::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#lower::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#lower:focus {
+    background: #ead200; /* Cor de fundo do slider ao focar */
+}
+
+/* Ajustes específicos para telas menores (dispositivos móveis) */
+@media screen and (max-width: 768px) {
+    #lower {
+        height: 12px; /* Ajusta a altura do slider para dispositivos móveis */
+    }
+    #lower::-webkit-slider-thumb, #lower::-moz-range-thumb {
+        width: 18px; /* Ajusta o tamanho do thumb no mobile */
+        height: 18px;
+    }
+}
+
+
+
+    /* Animação Comunista */
+    @keyframes communistAnimation {
+            0% {
+                background-color: red;
+            }
+            50% {
+                background-color: #ffcc00;
+            }
+            100% {
+                background-color: red;
+            }
+        }
+
+        .communist-animation {
+            animation: communistAnimation 2s infinite;
+            color: white;
+            text-align: center;
+        }
+
+        /* Estrela que aparece na animação */
+        #star {
+            font-size: 50px;
+            color: yellow;
+            display: none;
+        }
+
+        /* Estilo para a área de animação */
+        .communist-style {
+            border: 5px solid yellow;
+            padding: 10px;
+            font-size: 20px;
+            margin-top: 20px;
+            background-color: #ffcc00;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="NORMAL">O Real Custo Brasil - Simulador Educativo de Renda Mensal e de  Taxacão sem aliquota na sociedade Brasileira</h1>
+    <h1 id="COM">PARABENS VOCE TAXOU TODOS OS RICOS DO 1 PORCENTO  </h1>
+
+    <h3>Qual a porcentagem da populacao que ganham entre esses dois valores?</h3>
+    <h1 style="color: red;"> É JUSTO TAMANHA DESIGUALDADE?</h1>
+    <h4>Dado simplicidade de rodar no navegador pode gerar Resultados diferentes para mesma entrada*</h4>
+    <label for="lower">Valor mínimo (R$):</label>
+    <input type="range" id="lower" min="0" max="441000" step="100" value="0">
+    <input type="number" id="lowerValue" value="0" min="0" max="441000" step="10"><br>
+    
+    <label for="upper">Valor máximo (R$):</label>
+    <input type="range" id="upper" min="0" max="441000" step="100" value="1420">
+    <input type="number" id="upperValue" value="1420" min="0" max="441000" step="10"><br>
+    
+    <label for="taxacao_input">Taxacao para simulacao (%):</label>
+    <input type="range" id="taxacao_range" value="50" min="0" max="100" step="1"><br>
+    <input type="number" id="taxacao_input" value="50" min="0" max="100" step="10"><br>
+    <button onclick="set1PORCENT()">1% Porcento Mais Rico</button>
+    <button onclick="setSM()">Salario Minimo 1412(RJ)</button><br>
+    
+    <p id="salaryRange">Probabilidade Aparacera Aqui e</p>
+    <h1 id="dinheiro">R$</h1>
+    <h1 id="taxacao"></h1>
+    <h1 id="total_tax"></h1>
+    
+   
+    
+    <label for="upper"> Um Gráfico da Simulação* da Probabilidade de Renda abaixo:</label>
+    <canvas id="lognormPlot" width="300" height="200"></canvas>
+    <label for="upper"> Um Gráfico da Simulação* de diferentes Taxacoes para o intervalo selecionado:</label>
+        <canvas id="taxChart" width="600" height="400"></canvas>
+
+    
+    <p class="footer-note">*baseados em dados do primeiro trimestre do PNAD de 2024, aplicado curva lognormal para 99 porcento e pareto para 1 porcento com remocao de outliers</p>
+    <p class="footer-note">*Isso é uma simulacao e pode gerar resultados diferentes computadores dado Monte Carlos</p>
+
+    <!-- Estrela da animação -->
+<div id="star">&#9733;</div>
+
+<p id="taxacao_status" class="communist-style">Animação Comunista Ativada!</p>
+
+
+    <script>
+
+
+
+        // Função para definir o valor da taxação de acordo com o botão clicado
+        function setSM() {
+          document.getElementById("upper").value = 1412;
+          document.getElementById("lower").value = 0;
+          document.getElementById("upperValue").value = 1412;
+          document.getElementById("lowerValue").value = 0;
+          checkConditions();
+          calculateCDFDifference();
+        }
+        function set1PORCENT() {
+          document.getElementById("upper").value = 410000;
+          document.getElementById("lower").value = 20100;
+          document.getElementById("upperValue").value = 410000;
+          document.getElementById("lowerValue").value = 20100;
+          checkConditions();
+          calculateCDFDifference();
+          
+        }
+        function setTaxacao(value) {
+        document.getElementById("taxacao_input").value = value;
+        document.getElementById("taxacao_range").value = value;
+        checkConditions();  // Verifica as condições toda vez que a taxação é alterada
+    }
+
+    // Função para verificar as condições
+    function checkConditions() {
+        let taxacaoInput = document.getElementById("taxacao_input").value;
+        let taxacaoRange = document.getElementById("taxacao_range").value;
+        let lower = document.getElementById("lower").value;
+        let upper = document.getElementById("upper").value;
+
+        // Verifica se as condições são atendidas
+        if ((taxacaoInput == 100 || taxacaoRange == 100) && lower >= 20100 && upper >= 20100) {
+          
+            document.getElementById("COM").style.display = "block"; 
+            document.getElementById("NORMAL").style.display = "none";  
+        } else { 
+            document.getElementById("NORMAL").style.display = "block"; 
+            document.getElementById("COM").style.display = "none";  
+            document.body.classList.remove("communist-animation");  // Remove animação no corpo
+            document.getElementById("star").style.display = "none";  // Esconde a estrela
+            document.getElementById("taxacao_status").style.display = "none";  // Esconde o texto         }
+    }}
+
+    // Adiciona um evento para verificar as condições ao mudar qualquer campo relevante
+    document.getElementById("taxacao_input").addEventListener("input", checkConditions);
+    document.getElementById("taxacao_range").addEventListener("input", checkConditions);
+    document.getElementById("lower").addEventListener("input", checkConditions);
+    document.getElementById("upper").addEventListener("input", checkConditions);
+
+    
+    </script>
+    <script>
+
+
+document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById("NORMAL").style.display = "block"; 
+            
+            calculateCDFDifference();
+            document.getElementById('lower').addEventListener('input', function() {
+                document.getElementById('lowerValue').value = this.value;
+                calculateCDFDifference();
+            });
+
+            document.getElementById('upper').addEventListener('input', function() {
+                document.getElementById('upperValue').value = this.value;
+                calculateCDFDifference();
+            });
+            document.getElementById('lowerValue').addEventListener('input', function() {
+                document.getElementById('lower').value = this.value;
+                calculateCDFDifference();
+            });
+
+            document.getElementById('upperValue').addEventListener('input', function() {
+                document.getElementById('upper').value = this.value;
+                calculateCDFDifference();
+            });
+            document.getElementById('taxacao_input').addEventListener('input', function() {
+                document.getElementById('taxacao_range').value = this.value;
+                calculateCDFDifference();
+            });
+            document.getElementById('taxacao_range').addEventListener('input', function() {
+                document.getElementById('taxacao_input').value = this.value;
+                calculateCDFDifference();
+            });
+
+            
+        });
+
+    </script>
+
+<script>
+    // Public Key stored in JavaScript, not visible in the UI
+    const publicKeyPem = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyob0JoZ8ptS2BtBNOrqc
+aC7Nbf0J161YnSNEz9+Om0YAaQRMcPzipl//ux2Iw3z06v6Q3E39sj/ODTrxYjBe
+b40ujpaXLNVLbJKzVl2RnXN7Co5zk+UyVqfdxx/mEi/x4Gm8Nzumfq4bYeSCMHtq
+uRfJbq0mDrbLpM2+Cf4JFzLDQZU/TlYGurRjIBP6YnB3yGxuUnCKvkb5i9fD332R
+ZuLKlc9J52vu0Oyk4rNKw7Li3/QkUS447X8SmwaIOudP3tkVXzKCmB4lZYS4PdKR
+eoybPnqcZKTfdBQdShvueiYy+gvUmAgvtiVULaT4ZT1qqedSnq4a7+XUJPa62qQs
+xwIDAQAB
+-----END PUBLIC KEY-----
+`;
+
+    // Now you can use the key in your JavaScript functions
+    console.log(publicKeyPem);  // For example, you can log it to the console or use it in cryptographic functions
+</script>
+</body>
+</html>
