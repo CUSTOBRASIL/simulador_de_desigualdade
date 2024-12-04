@@ -382,7 +382,7 @@ salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
     
     let taxacaoelem = document.getElementById("taxacao");
     soma  = expectedIncome(lower,upper,10000000,probabilidade);
-    salaryRangeElement.innerHTML = `Essas Pessoas tem no total  em media  <span style="color: #FF5733; font-size: 1.5em;">R$${(soma)}<span>`;
+    salaryRangeElement.innerHTML = `Essas Pessoas tem no total  em media  <span style="color: #FF5733; font-size: 1.5em;">R$${(soma).toFixed(2)}</span>. Isso é <span style="color: #FF5733; font-size: 1.5em;">${(soma/33314).toFixed(2)} % </span> do salario mais alto da marinha ganha.`;
     return soma;
     }
 
@@ -750,7 +750,7 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mu, sigma, paretoShape, 
     <h1 id="COM">PARABENS VOCE TAXOU TODOS OS RICOS DO 1 PORCENTO  </h1>
 
     <h3>Qual a porcentagem da populacao que ganham entre esses dois valores?</h3>
-    <h1 style="color: red;"> É JUSTO TAMANHA DESIGUALDADE?</h1>
+    <h1 style="color: red;"> É JUSTO TAMANHA DESIGUALDADE E AINDA CONTINUAR SENDO UM FODIDO?</h1>
     <h4>Dado simplicidade de rodar no navegador pode gerar Resultados diferentes para mesma entrada*</h4>
     <label for="lower">Valor mínimo (R$):</label>
     <input type="range" id="lower" min="0" max="441000" step="100" value="0">
