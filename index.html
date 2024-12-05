@@ -419,7 +419,7 @@ function trapezoidal(y,a, b, n)
 
 // Lognormal distribution sampling
 function lognormalSample(mu, sigma, scale) {
-    return jStat.lognormal.sample( mean, scale);
+    return jStat.lognormal.sample(mu, sigma, scale);
 }
 
 // Pareto distribution sampling
@@ -432,7 +432,7 @@ function upperLimitRandom(percentileLimit = 0.99) {
 }
 
 function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
-    let sum = 0;
+   let sum = 0;
     let count = 0;
     
     for (let i = 0; i < n; i++) {
@@ -442,7 +442,7 @@ function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
         let sample;
         if (rand < w1) {
             // Sample from Lognormal distribution
-            sample =  jStat.lognormal.sample( mean, scale);
+            sample = lognormalSample(mu, sigma, scale);
         } else {
             // Sample from Pareto distribution
             sample = paretoSample(alpha, xm);
