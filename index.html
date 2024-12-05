@@ -418,8 +418,8 @@ function trapezoidal(y,a, b, n)
 // Function to calculate total income for an interval [x_min, x_max]
 
 // Lognormal distribution sampling
-function lognormalSample(mean, sigma, scale) {
-    return jStat.lognormal.sample( sigma, scale);
+function lognormalSample(mu, sigma, scale) {
+    return jStat.lognormal.sample( mean, scale);
 }
 
 // Pareto distribution sampling
@@ -442,7 +442,7 @@ function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
         let sample;
         if (rand < w1) {
             // Sample from Lognormal distribution
-            sample = lognormalSample(mu, sigma, scale);
+            sample =  jStat.lognormal.sample( mean, scale);
         } else {
             // Sample from Pareto distribution
             sample = paretoSample(alpha, xm);
