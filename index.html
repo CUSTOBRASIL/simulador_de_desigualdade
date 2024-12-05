@@ -381,7 +381,7 @@ salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
     let salaryRangeElement = document.getElementById("dinheiro");
     
     let taxacaoelem = document.getElementById("taxacao");
-    soma  = expectedIncome(lower,upper,10000000,probabilidade);
+    soma  = come(lower,upper,10000000,probabilidade);
     salaryRangeElement.innerHTML = `Essas Pessoas tem no total  em media  <span style="color: #FF5733; font-size: 1.5em;">R$${(soma).toFixed(2)}</span>. Isso é <span style="color: #FF5733; font-size: 1.5em;">${((soma/33314)*100).toFixed(2)} % </span> do salario mais alto que a marinha ganha.`;
     return soma;
     }
@@ -494,7 +494,7 @@ function totalIncome( xMin, xMax, d,probability,tax) {
     // Example parameters for Lognormal and Pareto distributions
   return monteCarlotaxes( sigma, scale, alpha, xm, xMin, xMax, year,w1, w2,tax) 
 }
-function  expectedIncom( xMin, xMax, d,probability) {
+function  expectedIncome( xMin, xMax, d,probability) {
     const n = 10000;
     // Example parameters for Lognormal and Pareto distributions
 
