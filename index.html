@@ -1,41 +1,28 @@
-f<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Educativo de Renda - Real Custo Brasil</title>
+    <title>Salary Range and CDF Difference</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.6.0/math.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.4/dist/jstat.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-V8G08HNYE9"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-V8G08HNYE9');
-</script>
        <script>
 
 
-
 const year = 212583750
-const std = 0.7530862927021142;                // Lognormal sigma (standard deviation)
-const sigma =0.7530862927021142;  
-const scale = 1676.8128081412397;// Lognormal scale parameter
-const alpha =1.5020067975738562; // Pareto shape parameter (alpha)
-const xm = 1 ;            // Pareto scale parameter (xm)
+const mu =7.518888936086307;  // Lognormal mean (mu)
+const std  =0.906;                // Lognormal sigma (standard deviation)
+const sigma = 0.906;  
+const scale = 1842.519;// Lognormal scale parameter
+const alpha = 0.177; // Pareto shape parameter (alpha)
+const xm = 20000.0;            // Pareto scale parameter (xm)
 const w1 = 0.99;                // Weight for Lognormal distribution
 const w2 = 0.01;                // Weight for Pareto distribution
-const mean = 7.4246501325405605;
-const mu =  7.4246501325405605;
-function formatNumberWithSeparator(num, separator = '.') {
-    return num.toString().toLocaleString('en-US'); ;
-}
-
+const mean =7.518888936086307;
 function generateSamplecdf(mean, std, alpha, xm, w1, w2,dist) {
     
     
@@ -111,11 +98,15 @@ function mixtureCDFArea(lower, upper, mean, std, alpha, xm, w1, w2) {
 
     let cdf = 0;
     function mixtureCDF(x) {
-      
+        if (x <= xm) {
+            // Only log-normal distribution is relevant
+            return w1 * jStat.lognormal.cdf(x, mean,std);
+        } else {
             // Both log-normal and Pareto contributions
-            const logNormalPart = w1 * jStat.lognormal.cdf(x, mean,std); // CDF of log-normal up to xm is w1
+            const logNormalPart = w1; // CDF of log-normal up to xm is w1
             const paretoPart = w2 * paretoCDF(x,alpha,xm); // Pareto CDF above xm
             return logNormalPart + paretoPart;
+        }
     }
 return mixtureCDF(upper) - mixtureCDF(lower);
 
@@ -124,9 +115,9 @@ return mixtureCDF(upper) - mixtureCDF(lower);
 
 
 
-function logProbabilityLogNormal(a, b, mean, sigma) {
-    const cdfA = jStat.lognormal.cdf(a, mean, sigma);
-    const cdfB = jStat.lognormal.cdf(b, mean, sigma);
+function logProbabilityLogNormal(a, b, mu, sigma) {
+    const cdfA = jStat.lognormal.cdf(a, mu, sigma);
+    const cdfB = jStat.lognormal.cdf(b, mu, sigma);
 
     // Prevent issues with log(0) by checking for very small values
     if (cdfB <= 0 || cdfA <= 0) {
@@ -167,8 +158,8 @@ salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
 
 
         // Define range for x-values (income range example)
-        const minVal = 10.0; // Minim value (you may adjust this based on your data)
-        const maxVal = 300000.0; // Maxim value (adjust according to your data)
+        const minVal = 10.0; // Minimum value (you may adjust this based on your data)
+        const maxVal = 300000.0; // Maximum value (adjust according to your data)
         const steps = 1000; // Number of points for the x-axis
         const step = (maxVal - minVal) / steps; // Step size for the x-values
         const p_size  = 216400000
@@ -269,7 +260,7 @@ const w1 = 0.99;
 const w2 = 0.01;        
 const probabilidade = mixtureCDFArea(lower, upper, mean, std, alpha, xm, w1, w2);// Exibindo os resultados
 let salaryRangeElement = document.getElementById("salaryRange");
-salaryRangeElement.innerHTML = `${formatNumberWithSeparator((probabilidade *216400000).toFixed(0))} pessoas ganham entre R$${lower} á R$${upper}, o que equivale a <span style="color: #FF5733; font-size: 1.5em;">${formatNumberWithSeparator((probabilidade *100).toFixed(2))}%*</span>da população.`;
+salaryRangeElement.innerHTML = `De acordo com a estatistica ${(probabilidade *216400000)}  pessoas  ganham entre R$${lower} e R$${upper} com a probabilidade: <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade * 100).toFixed(6)}%*</span>`;
 const somat  = calcular(probabilidade);
 ctx.myChart  = new Chart(ctx, config);
 const populationInRange = year * (upper - lower) / 10000000;  
@@ -287,8 +278,8 @@ function taxacao(somat, probabilidade,upper,lower,result) {
             const elementtt = document.getElementById("total_tax");
             const taxacaop = parseFloat(elementt)/100;
             
-            elementto.innerHTML = `Taxacao de ${(taxacaop*100)}% garantindo em media R$${formatNumberWithSeparator(((taxacaop*somat)).toFixed(2))} e sobra de R$${formatNumberWithSeparator(((somat)-(taxacaop*somat)).toFixed(2))} por pessoa`;
-            elementtt.innerHTML = ` Nesse intervalo foi taxado em 1 mes  <span style="color: #FF5733; font-size: 1.5em;">R$${formatNumberWithSeparator(result)}<span>`;
+            elementto.innerHTML = `Taxacao de ${(taxacaop*100)}% garantindo em media R$${((taxacaop*somat)).toFixed(2)} e sobra de R$${((somat)-(taxacaop*somat)).toFixed(2)} por pessoa`;
+            elementtt.innerHTML = ` Nesse intervalo e taxa voce taxou em 2024 em 1 mes: <span style="color: #FF5733; font-size: 1.5em;">R$${result}<span>`;
         }
        
 }
@@ -331,7 +322,7 @@ window.taxChart = new Chart(ctx, {
             y: {
                 beginAtZero: true, // Ensures the y-axis starts at 0
                 ticks: {
-                    callback: function(value) { return 'R$ ' + formatNumberWithSeparator(value.toFixed(2)); } // Optional: Format the ticks with "R$"
+                    callback: function(value) { return 'R$ ' + value.toFixed(2); } // Optional: Format the ticks with "R$"
                 }
             }
         }}})
@@ -344,7 +335,7 @@ window.taxChart = new Chart(ctx, {
     let tax = 0;
 
     if (income <= 2259.20) {
-        tax = 0; // Isso é um silacao
+        tax = 0; // Isso é um simulacao
     } else if (income <= 2826.65) {
         tax = 0.075
     } else if (income <= 3751.05) {
@@ -383,7 +374,7 @@ salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
     
     let taxacaoelem = document.getElementById("taxacao");
     soma  = expectedIncome(lower,upper,10000000,probabilidade);
-    salaryRangeElement.innerHTML = `Essas Pessoas tem no total  em media  <span style="color: #FF5733; font-size: 1.5em;">R$${formatNumberWithSeparator((soma).toFixed(2))}</span>. Isso é <span style="color: #FF5733; font-size: 1.5em;">${formatNumberWithSeparator(((soma/33314)*100).toFixed(2))} % </span> do salario mais alto que a marinha ganha.`;
+    salaryRangeElement.innerHTML = `Essas Pessoas tem no total  em media  <span style="color: #FF5733; font-size: 1.5em;">R$${(soma)}<span>`;
     return soma;
     }
 
@@ -405,14 +396,14 @@ function trapezoidal(y,a, b, n)
     let h = (b - a) / n;
   
     // Computing sum of first and last terms
-    // in above forla
+    // in above formula
     let s = y(a) + y(b);
   
-    // Adding middle terms in above forla
+    // Adding middle terms in above formula
     for(let i = 1; i < n; i++)
         s += 2 * y(a + i * h);
   
-    // h/2 indicates (b-a)/2n. ltiplying h/2
+    // h/2 indicates (b-a)/2n. Multiplying h/2
     // with s.
     return (h / 2) * s;
 }
@@ -433,7 +424,7 @@ function upperLimitRandom(percentileLimit = 0.99) {
 }
 
 function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
-   let sum = 0;
+    let sum = 0;
     let count = 0;
     
     for (let i = 0; i < n; i++) {
@@ -441,10 +432,14 @@ function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
         let rand = Math.random();  // This will return a value >= percentileLimit (0.99)
         
         let sample;
+        if (rand < w1) {
             // Sample from Lognormal distribution
-
+            sample = lognormalSample(mu, sigma, scale);
+        } else {
             // Sample from Pareto distribution
-            sample = (w1*paretoSample(alpha, xm)) + (w2*lognormalSample(mu, sigma, scale));
+            sample = paretoSample(alpha, xm);
+        }
+
         // If the sample is within the range [a, b], include it in the sum
         if (sample >= a && sample <= b) {
             sum += sample;
@@ -457,8 +452,7 @@ function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
 }
 
 
-
-function monteCarlotaxes( sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
+function monteCarlotaxes(mu, sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
     let sum = 0;
     let count = 0;
     
@@ -468,7 +462,7 @@ function monteCarlotaxes( sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
         let sample;
         if (rand < w1) {
             // Sample from Lognormal distribution
-            sample = lognormalSample( sigma, scale);
+            sample = lognormalSample(mu, sigma, scale);
         } else {
             // Sample from Pareto distribution
             sample = paretoSample(alpha, xm);
@@ -490,15 +484,15 @@ function monteCarlotaxes( sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
 function totalIncome( xMin, xMax, d,probability,tax) {
     const n = 10000;
     // Example parameters for Lognormal and Pareto distributions
-  return monteCarlotaxes( sigma, scale, alpha, xm, xMin, xMax, year,w1, w2,tax) 
+  return monteCarlotaxes(mu, sigma, scale, alpha, xm, xMin, xMax, year,w1, w2,tax) 
 }
-function  expectedIncome( xMin, xMax, d,probability) {
+function expectedIncome( xMin, xMax, d,probability) {
     const n = 10000;
     // Example parameters for Lognormal and Pareto distributions
 
 
 // Calculate the expected value over the range [a, b]
-const expectedValue = monteCarloExpectedValue(mean, sigma, scale, alpha, xm, xMin, xMax, n, w1, w2);
+const expectedValue = monteCarloExpectedValue(mu, sigma, scale, alpha, xm, xMin, xMax, n, w1, w2);
 
 return expectedValue
 
@@ -506,10 +500,10 @@ return expectedValue
 
 
 
-function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape, paretoScale,taxes) {
+function calculateTotalAfterTaxIncome(a, b, N, P_total, mu, sigma, paretoShape, paretoScale,taxes) {
   // Function to generate Log-Normal samples
-  function generateLogNormalSamples(mean, sigma, size) {
-    return Array.from({ length: size }, () => jStat.lognormal.sample(mean, sigma, size));// Log-normal distribution using jStat
+  function generateLogNormalSamples(mu, sigma, size) {
+    return Array.from({ length: size }, () => jStat.lognormal.sample(mu, sigma, size));// Log-normal distribution using jStat
   }
 
   function generateParetoSamples(shape, scale, size) {
@@ -522,7 +516,7 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
   const numLogNormalSamples = N - numParetoSamples;
 
   // Generate samples
-  const logNormalSamples = generateLogNormalSamples(mean, sigma, numLogNormalSamples);
+  const logNormalSamples = generateLogNormalSamples(mu, sigma, numLogNormalSamples);
   const paretoSamples = generateParetoSamples(paretoShape, paretoScale, numParetoSamples);
 
   // Combine the two distributions (Log-Normal and Pareto)
@@ -557,7 +551,7 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
             border-radius: 10px;
             text-transform: uppercase;
             display : none;
-            animation: comnistAnimation 3s infinite;
+            animation: communistAnimation 3s infinite;
             box-shadow: 0 0 15px 5px rgba(255, 255, 0, 0.6);
         }
        body {
@@ -655,7 +649,7 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
 
 #salaryRange:hover {
     transform: scale(1.1); /* Aumenta ligeiramente o tamanho ao passar o mouse */
-    background-color: #a09445; /* da a cor de fundo ao passar o mouse */
+    background-color: #a09445; /* Muda a cor de fundo ao passar o mouse */
 }
 
 #lower ,#upper {
@@ -707,8 +701,8 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
 
 
 
-    /* Animação Conista */
-    @keyframes comnistAnimation {
+    /* Animação Comunista */
+    @keyframes communistAnimation {
             0% {
                 background-color: red;
             }
@@ -720,8 +714,8 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
             }
         }
 
-        .comnist-animation {
-            animation: comnistAnimation 2s infinite;
+        .communist-animation {
+            animation: communistAnimation 2s infinite;
             color: white;
             text-align: center;
         }
@@ -734,7 +728,7 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
         }
 
         /* Estilo para a área de animação */
-        .comnist-style {
+        .communist-style {
             border: 5px solid yellow;
             padding: 10px;
             font-size: 20px;
@@ -744,11 +738,11 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
     </style>
 </head>
 <body>
-    <h1 id="NORMAL">O Real Custo Brasil - Silador Educativo de Renda Mensal e de  Taxacão sem aliquota na sociedade Brasileira</h1>
+    <h1 id="NORMAL">O Real Custo Brasil - Simulador Educativo de Renda Mensal e de  Taxacão sem aliquota na sociedade Brasileira</h1>
     <h1 id="COM">PARABENS VOCE TAXOU TODOS OS RICOS DO 1 PORCENTO  </h1>
 
     <h3>Qual a porcentagem da populacao que ganham entre esses dois valores?</h3>
-    <h1 style="color: red;"> É JUSTO TAMANHA DESIGUALDADE E AINDA CONTINUAR SENDO UM FODIDO?</h1>
+    <h1 style="color: red;"> É JUSTO TAMANHA DESIGUALDADE?</h1>
     <h4>Dado simplicidade de rodar no navegador pode gerar Resultados diferentes para mesma entrada*</h4>
     <label for="lower">Valor mínimo (R$):</label>
     <input type="range" id="lower" min="0" max="441000" step="100" value="0">
@@ -758,7 +752,7 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
     <input type="range" id="upper" min="0" max="441000" step="100" value="1420">
     <input type="number" id="upperValue" value="1420" min="0" max="441000" step="10"><br>
     
-    <label for="taxacao_input">Taxacao para silacao (%):</label>
+    <label for="taxacao_input">Taxacao para simulacao (%):</label>
     <input type="range" id="taxacao_range" value="50" min="0" max="100" step="1"><br>
     <input type="number" id="taxacao_input" value="50" min="0" max="100" step="10"><br>
     <button onclick="set1PORCENT()">1% Porcento Mais Rico</button>
@@ -771,21 +765,19 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
     
    
     
-    <label for="upper"> Um Gráfico da Silação* da Probabilidade de Renda abaixo:</label>
+    <label for="upper"> Um Gráfico da Simulação* da Probabilidade de Renda abaixo:</label>
     <canvas id="lognormPlot" width="300" height="200"></canvas>
     <label for="upper"> Um Gráfico da Simulação* de diferentes Taxacoes para o intervalo selecionado:</label>
         <canvas id="taxChart" width="600" height="400"></canvas>
 
     
-    <p class="footer-note">*baseados em dados do <a href="https://www.ibge.gov.br/estatisticas/sociais/trabalho/9171-pesquisa-nacional-por-amostra-de-domicilios-continua-mensal.html" target="_blank">
-    Pesquisa Nacional por Amostra de Domicílios Contínua Mensal segundo trimestre de 2024
-</a>
-, aplicado curva lognormal para 99 porcento e pareto para 1 porcento com remocao de outliers</p>
+    <p class="footer-note">*baseados em dados do primeiro trimestre do PNAD de 2024, aplicado curva lognormal para 99 porcento e pareto para 1 porcento com remocao de outliers</p>
     <p class="footer-note">*Isso é uma simulacao e pode gerar resultados diferentes computadores dado Monte Carlos</p>
 
     <!-- Estrela da animação -->
 <div id="star">&#9733;</div>
 
+<p id="taxacao_status" class="communist-style">Animação Comunista Ativada!</p>
 
 
     <script>
@@ -818,8 +810,8 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
 
     // Função para verificar as condições
     function checkConditions() {
-        let taxacaoRange = document.getElementById("taxacao_range").value;
         let taxacaoInput = document.getElementById("taxacao_input").value;
+        let taxacaoRange = document.getElementById("taxacao_range").value;
         let lower = document.getElementById("lower").value;
         let upper = document.getElementById("upper").value;
 
@@ -833,8 +825,9 @@ function calculateTotalAfterTaxIncome(a, b, N, P_total, mean, sigma, paretoShape
             document.getElementById("COM").style.display = "none";  
             document.body.classList.remove("communist-animation");  // Remove animação no corpo
             document.getElementById("star").style.display = "none";  // Esconde a estrela
-    }
-    }
+            document.getElementById("taxacao_status").style.display = "none";  // Esconde o texto         }
+    }}
+
     // Adiciona um evento para verificar as condições ao mudar qualquer campo relevante
     document.getElementById("taxacao_input").addEventListener("input", checkConditions);
     document.getElementById("taxacao_range").addEventListener("input", checkConditions);
