@@ -431,7 +431,7 @@ function upperLimitRandom(percentileLimit = 0.99) {
     return Math.random() * (1 - percentileLimit) + percentileLimit;
 }
 
-function monteCarloExpectedValue( sigma, scale, alpha, xm, a, b, n, w1, w2) {
+function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
     let sum = 0;
     let count = 0;
     
@@ -440,17 +440,16 @@ function monteCarloExpectedValue( sigma, scale, alpha, xm, a, b, n, w1, w2) {
         let rand = Math.random();  // This will return a value >= percentileLimit (0.99)
         
         let sample;
-        if (rand < w1) {
+        let sample2;
+
             // Sample from Lognormal distribution
-            sample = lognormalSample( sigma, scale);
-        } else {
+            sample = lognormalSample(mu, sigma, scale);
             // Sample from Pareto distribution
-            sample = paretoSample(alpha, xm);
-        }
+            sample2 = paretoSample(alpha, xm);
 
         // If the sample is within the range [a, b], include it in the sum
         if (sample >= a && sample <= b) {
-            sum += sample;
+            sum += (w1*sample+w2*sample2);
             count++;
         }
     }
@@ -458,6 +457,7 @@ function monteCarloExpectedValue( sigma, scale, alpha, xm, a, b, n, w1, w2) {
     // Estimate the expected value as the average of the sampled values
     return count > 0 ? sum / count : 0;
 }
+
 
 
 function monteCarlotaxes( sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
