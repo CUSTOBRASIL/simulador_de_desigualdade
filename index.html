@@ -32,7 +32,7 @@ const w1 = 0.99;                // Weight for Lognormal distribution
 const w2 = 0.01;                // Weight for Pareto distribution
 const mean = 7.446646592635273;
 function formatNumberWithSeparator(num, separator = '.') {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+    return num.toString().toLocaleString('en-US'); ;
 }
 
 function generateSamplecdf(mean, std, alpha, xm, w1, w2,dist) {
