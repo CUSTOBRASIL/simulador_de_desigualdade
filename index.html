@@ -31,6 +31,10 @@ const w1 = 0.99;                // Weight for Lognormal distribution
 const w2 = 0.01;                // Weight for Pareto distribution
 const mean = 7.29769407824076;
 const mu = 7.29769407824076;
+function formatNumberWithSeparator(num, separator = '.') {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+}
+
 function generateSamplecdf(mean, std, alpha, xm, w1, w2,dist) {
     
     
@@ -268,7 +272,7 @@ const w1 = 0.99;
 const w2 = 0.01;        
 const probabilidade = mixtureCDFArea(lower, upper, mean, std, alpha, xm, w1, w2);// Exibindo os resultados
 let salaryRangeElement = document.getElementById("salaryRange");
-salaryRangeElement.innerHTML = `${(probabilidade *216400000).toFixed(0)} pessoas ganham entre R$${lower} á R$${upper}, o que equivale a <span style="color: #FF5733; font-size: 1.5em;">${(probabilidade *100).toFixed(2)}%*</span>da população.`;
+salaryRangeElement.innerHTML = `${formatNumberWithSeparator((probabilidade *216400000).toFixed(0))} pessoas ganham entre R$${lower} á R$${upper}, o que equivale a <span style="color: #FF5733; font-size: 1.5em;">${formatNumberWithSeparator((probabilidade *100).toFixed(2))}%*</span>da população.`;
 const somat  = calcular(probabilidade);
 ctx.myChart  = new Chart(ctx, config);
 const populationInRange = year * (upper - lower) / 10000000;  
@@ -286,7 +290,7 @@ function taxacao(somat, probabilidade,upper,lower,result) {
             const elementtt = document.getElementById("total_tax");
             const taxacaop = parseFloat(elementt)/100;
             
-            elementto.innerHTML = `Taxacao de ${(taxacaop*100)}% garantindo em media R$${((taxacaop*somat)).toFixed(2)} e sobra de R$${((somat)-(taxacaop*somat)).toFixed(2)} por pessoa`;
+            elementto.innerHTML = `Taxacao de ${(taxacaop*100)}% garantindo em media R$${formatNumberWithSeparator(((taxacaop*somat)).toFixed(2))} e sobra de R$${formatNumberWithSeparator(((somat)-(taxacaop*somat)).toFixed(2))} por pessoa`;
             elementtt.innerHTML = ` Você em 2024 em 1 mes o total de  <span style="color: #FF5733; font-size: 1.5em;">R$${result}<span>`;
         }
        
@@ -330,7 +334,7 @@ window.taxChart = new Chart(ctx, {
             y: {
                 beginAtZero: true, // Ensures the y-axis starts at 0
                 ticks: {
-                    callback: function(value) { return 'R$ ' + value.toFixed(2); } // Optional: Format the ticks with "R$"
+                    callback: function(value) { return 'R$ ' + formatNumberWithSeparator(value.toFixed(2)); } // Optional: Format the ticks with "R$"
                 }
             }
         }}})
@@ -382,7 +386,7 @@ salaryRangeElement.innerHTML = "Salario Maximo menor que minimo"
     
     let taxacaoelem = document.getElementById("taxacao");
     soma  = expectedIncome(lower,upper,10000000,probabilidade);
-    salaryRangeElement.innerHTML = `Essas Pessoas tem no total  em media  <span style="color: #FF5733; font-size: 1.5em;">R$${(soma).toFixed(2)}</span>. Isso é <span style="color: #FF5733; font-size: 1.5em;">${((soma/33314)*100).toFixed(2)} % </span> do salario mais alto que a marinha ganha.`;
+    salaryRangeElement.innerHTML = `Essas Pessoas tem no total  em media  <span style="color: #FF5733; font-size: 1.5em;">R$${formatNumberWithSeparator((soma).toFixed(2))}</span>. Isso é <span style="color: #FF5733; font-size: 1.5em;">${formatNumberWithSeparator(((soma/33314)*100).toFixed(2))} % </span> do salario mais alto que a marinha ganha.`;
     return soma;
     }
 
