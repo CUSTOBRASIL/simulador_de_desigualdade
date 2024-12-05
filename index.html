@@ -30,6 +30,7 @@ const xm = 5000.0;            // Pareto scale parameter (xm)
 const w1 = 0.99;                // Weight for Lognormal distribution
 const w2 = 0.01;                // Weight for Pareto distribution
 const mean = 7.29769407824076;
+const mu = 7.29769407824076;
 function generateSamplecdf(mean, std, alpha, xm, w1, w2,dist) {
     
     
@@ -418,7 +419,7 @@ function trapezoidal(y,a, b, n)
 
 // Lognormal distribution sampling
 function lognormalSample(mu, sigma, scale) {
-    return jStat.lognormal.sample(mu, sigma, scale);
+    return jStat.lognormal.sample( sigma, scale);
 }
 
 // Pareto distribution sampling
@@ -430,7 +431,7 @@ function upperLimitRandom(percentileLimit = 0.99) {
     return Math.random() * (1 - percentileLimit) + percentileLimit;
 }
 
-function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
+function monteCarloExpectedValue( sigma, scale, alpha, xm, a, b, n, w1, w2) {
     let sum = 0;
     let count = 0;
     
@@ -441,7 +442,7 @@ function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
         let sample;
         if (rand < w1) {
             // Sample from Lognormal distribution
-            sample = lognormalSample(mu, sigma, scale);
+            sample = lognormalSample( sigma, scale);
         } else {
             // Sample from Pareto distribution
             sample = paretoSample(alpha, xm);
@@ -459,7 +460,7 @@ function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
 }
 
 
-function monteCarlotaxes(mu, sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
+function monteCarlotaxes( sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
     let sum = 0;
     let count = 0;
     
@@ -469,7 +470,7 @@ function monteCarlotaxes(mu, sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
         let sample;
         if (rand < w1) {
             // Sample from Lognormal distribution
-            sample = lognormalSample(mu, sigma, scale);
+            sample = lognormalSample( sigma, scale);
         } else {
             // Sample from Pareto distribution
             sample = paretoSample(alpha, xm);
@@ -491,7 +492,7 @@ function monteCarlotaxes(mu, sigma, scale, alpha, xm, a, b, n, w1, w2,taxRate) {
 function totalIncome( xMin, xMax, d,probability,tax) {
     const n = 10000;
     // Example parameters for Lognormal and Pareto distributions
-  return monteCarlotaxes(mu, sigma, scale, alpha, xm, xMin, xMax, year,w1, w2,tax) 
+  return monteCarlotaxes( sigma, scale, alpha, xm, xMin, xMax, year,w1, w2,tax) 
 }
 function expectedIncome( xMin, xMax, d,probability) {
     const n = 10000;
