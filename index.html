@@ -441,14 +441,10 @@ function monteCarloExpectedValue(mu, sigma, scale, alpha, xm, a, b, n, w1, w2) {
         let rand = Math.random();  // This will return a value >= percentileLimit (0.99)
         
         let sample;
-        if (rand < w1) {
             // Sample from Lognormal distribution
-            sample = lognormalSample(mu, sigma, scale);
-        } else {
-            // Sample from Pareto distribution
-            sample = paretoSample(alpha, xm);
-        }
 
+            // Sample from Pareto distribution
+            sample = (w1*paretoSample(alpha, xm)) + (w2*lognormalSample(mu, sigma, scale));
         // If the sample is within the range [a, b], include it in the sum
         if (sample >= a && sample <= b) {
             sum += sample;
