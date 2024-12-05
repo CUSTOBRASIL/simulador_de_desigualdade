@@ -111,15 +111,11 @@ function mixtureCDFArea(lower, upper, mean, std, alpha, xm, w1, w2) {
 
     let cdf = 0;
     function mixtureCDF(x) {
-        if (x <= xm) {
-            // Only log-normal distribution is relevant
-            return w1 * jStat.lognormal.cdf(x, mean,std);
-        } else {
+      
             // Both log-normal and Pareto contributions
-            const logNormalPart = w1; // CDF of log-normal up to xm is w1
+            const logNormalPart = w1 * jStat.lognormal.cdf(x, mean,std); // CDF of log-normal up to xm is w1
             const paretoPart = w2 * paretoCDF(x,alpha,xm); // Pareto CDF above xm
             return logNormalPart + paretoPart;
-        }
     }
 return mixtureCDF(upper) - mixtureCDF(lower);
 
